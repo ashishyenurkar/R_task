@@ -1,4 +1,4 @@
-// Simulated Database (in-memory array to store blog posts)
+
 let blogPosts = [];
 
 // Helper function to find a blog post by ID
@@ -8,8 +8,32 @@ function findPostById(id) {
 
 // Controller to handle blog post operations
 export const getPosts = async (req, res) => {
-  res.status(200).json({ posts: blogPosts });
-};
+    const { page = 1, limit = 10, author } = req.query; // Destructuring with defaults
+  
+    // Filter by author if the author query parameter is provided
+    let filteredPosts = blogPosts;
+    if (author) {
+      filteredPosts = blogPosts.filter((post) => post.author.toLowerCase() === author.toLowerCase());
+    }
+  
+    // Calculate pagination values
+    const startIndex = (parseInt(page) - 1) * parseInt(limit);
+    const endIndex = startIndex + parseInt(limit);
+    const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+  
+    // Calculate total pages for pagination metadata
+    const totalPosts = filteredPosts.length;
+    const totalPages = Math.ceil(totalPosts / parseInt(limit));
+  
+    // Return the paginated and filtered posts
+    res.status(200).json({
+      posts: paginatedPosts,
+      currentPage: parseInt(page),
+      totalPages,
+      totalPosts,
+    });
+  };
+  
 
 export const getPostById = async (req, res) => {
   const { id } = req.params;
