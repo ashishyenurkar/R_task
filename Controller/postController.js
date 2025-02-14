@@ -1,4 +1,3 @@
-
 let blogPosts = [];
 
 // Helper function to find a blog post by ID
@@ -6,34 +5,39 @@ function findPostById(id) {
   return blogPosts.find((post) => post.id === id);
 }
 
+// Helper function for validating required fields
+function validateFields(fields, requiredFields) {
+  const missingFields = requiredFields.filter((field) => !fields[field]);
+  return missingFields;
+}
+
 // Controller to handle blog post operations
 export const getPosts = async (req, res) => {
-    const { page = 1, limit = 10, author } = req.query; // Destructuring with defaults
-  
-    // Filter by author if the author query parameter is provided
-    let filteredPosts = blogPosts;
-    if (author) {
-      filteredPosts = blogPosts.filter((post) => post.author.toLowerCase() === author.toLowerCase());
-    }
-  
-    // Calculate pagination values
-    const startIndex = (parseInt(page) - 1) * parseInt(limit);
-    const endIndex = startIndex + parseInt(limit);
-    const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
-  
-    // Calculate total pages for pagination metadata
-    const totalPosts = filteredPosts.length;
-    const totalPages = Math.ceil(totalPosts / parseInt(limit));
-  
-    // Return the paginated and filtered posts
-    res.status(200).json({
-      posts: paginatedPosts,
-      currentPage: parseInt(page),
-      totalPages,
-      totalPosts,
-    });
-  };
-  
+  const { page = 1, limit = 10, author } = req.query; // Destructuring with defaults
+
+  let filteredPosts = blogPosts;
+
+  // Filter by author if the author query parameter is provided
+  if (author) {
+    filteredPosts = blogPosts.filter((post) => post.author.toLowerCase() === author.toLowerCase());
+  }
+
+  // Calculate pagination
+  const startIndex = (parseInt(page) - 1) * parseInt(limit);
+  const endIndex = startIndex + parseInt(limit);
+  const paginatedPosts = filteredPosts.slice(startIndex, endIndex);
+
+  // Pagination metadata
+  const totalPosts = filteredPosts.length;
+  const totalPages = Math.ceil(totalPosts / parseInt(limit));
+
+  res.status(200).json({
+    posts: paginatedPosts,
+    currentPage: parseInt(page),
+    totalPages,
+    totalPosts,
+  });
+};
 
 export const getPostById = async (req, res) => {
   const { id } = req.params;
@@ -49,8 +53,11 @@ export const getPostById = async (req, res) => {
 export const createPost = async (req, res) => {
   const { title, content, author } = req.body;
 
-  if (!title || !content || !author) {
-    return res.status(400).json({ error: 'Title, content, and author are required' });
+  const missingFields = validateFields(req.body, ['title', 'content', 'author']);
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      error: `Missing required fields: ${missingFields.join(', ')}`,
+    });
   }
 
   const newPost = {
@@ -75,8 +82,11 @@ export const updatePost = async (req, res) => {
     return res.status(404).json({ error: 'Post not found' });
   }
 
-  if (!title || !content || !author) {
-    return res.status(400).json({ error: 'Title, content, and author are required' });
+  const missingFields = validateFields(req.body, ['title', 'content', 'author']);
+  if (missingFields.length > 0) {
+    return res.status(400).json({
+      error: `Missing required fields: ${missingFields.join(', ')}`,
+    });
   }
 
   post.title = title;

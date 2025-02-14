@@ -2,7 +2,6 @@ let users = [];
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcrypt';
 
-const JWT_SECRET = 'hkfhsfjdsljfknvndnf'; // Replace with a secure key
 const COOKIE_OPTIONS = { httpOnly: true, secure: false, sameSite: 'strict' };
 
 export const register = async (req, res) => {
@@ -41,7 +40,7 @@ export const register = async (req, res) => {
       return res.status(401).json({ error: 'Invalid username or password' });
     }
   
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '24h' });
+    const token = jwt.sign({ id: user.id}, process.env.JWT_SECRET, { expiresIn: '24h' });
     res.cookie('authToken', token, COOKIE_OPTIONS);
     res.status(200).json({ message: 'Login successful' });
   };
